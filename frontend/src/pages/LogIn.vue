@@ -1,41 +1,54 @@
 <template>
   <div class="login_box">
-    <input type="text" class="login_input" placeholder="Username" v-model="username" /><br /><br />
-    <input type="password" class="login_input" placeholder="Password" v-model="password" /><br /><br />
+    <input
+      type="text"
+      class="login_input"
+      placeholder="Username"
+      v-model="username"
+    /><br /><br />
+    <input
+      type="password"
+      class="login_input"
+      placeholder="Password"
+      v-model="password"
+    /><br /><br />
     <button class="login_button" @click="logIn">Log In</button>
-    <p v-if="status == 'loginFailed'" class="login_failed">the password you've entered is incorrect</p>
+    <p v-if="status == 'loginFailed'" class="login_failed">
+      the password you've entered is incorrect
+    </p>
     <template v-else><br /><br /></template>
-    <hr /><br />
+    <hr />
+    <br />
     <button class="signup_button" @click="signUp">Sign Up</button>
   </div>
 </template>
 
 <script>
-import { logIn } from "../api";
+import { logIn } from '../api'
 
 export default {
-  name: "LogIn",
+  name: 'LogIn',
   data() {
     return {
-      username: "",
-      password: "",
-      status: "",
-    };
+      username: '',
+      password: '',
+      status: '',
+    }
   },
   methods: {
     async logIn() {
-      const resp = await logIn(this.username, this.password);
-      if (resp.msg === "failed") {
-        this.status = "loginFailed";
+      const resp = await logIn(this.username, this.password)
+      if (resp.msg === 'failed') {
+        this.status = 'loginFailed'
       } else {
-        this.$router.push({ name: "Home" });
+        this.$router.push({ name: 'Home' })
       }
     },
     signUp() {
-      this.$router.push({ name: "SignUp" });
-    }
+      this.$router.push({ name: 'SignUp' })
+    },
   },
-};
+}
 </script>
 
 <style lang="scss" scoped>

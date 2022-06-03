@@ -1,40 +1,59 @@
 <template>
   <form class="signup_box" @submit.prevent="signUp">
-    <input type="text" class="signup_input" placeholder="Username" v-model="username" required/><br /><br />
-    <input type="password" class="signup_input" placeholder="Password" v-model="password" required/><br /><br />
-    <input type="email" class="signup_input" placeholder="email" v-model="email" required/>
+    <input
+      type="text"
+      class="signup_input"
+      placeholder="Username"
+      v-model="username"
+      required
+    /><br /><br />
+    <input
+      type="password"
+      class="signup_input"
+      placeholder="Password"
+      v-model="password"
+      required
+    /><br /><br />
+    <input
+      type="email"
+      class="signup_input"
+      placeholder="email"
+      v-model="email"
+      required
+    />
     <p v-if="warning" class="warning">{{ warning }}</p>
     <template v-else><br /><br /></template>
-    <hr /><br />
+    <hr />
+    <br />
     <button class="signup_button">Sign Up</button>
   </form>
 </template>
 
 <script>
-import * as api from "../api";
+import * as api from '../api'
 
 export default {
-  name: "SignUp",
+  name: 'SignUp',
   data() {
     return {
-      username: "",
-      password: "",
-      email: "",
-      warning: "",
-    };
+      username: '',
+      password: '',
+      email: '',
+      warning: '',
+    }
   },
   methods: {
     async signUp() {
       try {
-        await api.signUp(this.username, this.password, this.email);
-        await api.logIn(this.username, this.password);
-        this.$router.push({ name: "Home" });
-      } catch(e) {
-        this.warning = e.response.data.username[0];
+        await api.signUp(this.username, this.password, this.email)
+        await api.logIn(this.username, this.password)
+        this.$router.push({ name: 'Home' })
+      } catch (e) {
+        this.warning = e.response.data.username[0]
       }
     },
   },
-};
+}
 </script>
 
 <style lang="scss" scoped>

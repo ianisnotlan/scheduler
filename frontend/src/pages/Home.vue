@@ -1,7 +1,12 @@
 <template>
   <div class="schedule">
     <div v-if="username" class="user">
-      <button class="user_name hover" @click="showUserDropdown = !showUserDropdown">{{ username }}</button>
+      <button
+        class="user_name hover"
+        @click="showUserDropdown = !showUserDropdown"
+      >
+        {{ username }}
+      </button>
       <div v-if="showUserDropdown" class="user_dropdown">
         <div class="hover">Profile</div>
         <div class="hover" @click="logOut">Log out</div>
@@ -55,119 +60,120 @@
 </template>
 
 <script>
-import * as api from "../api"
+import * as api from '../api'
 
 export default {
-  name: "Home",
+  name: 'Home',
   data() {
     return {
-      username: "",
+      username: '',
       days: [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
       ],
+      abbrDays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
       selectedMonth: null,
       selectedYear: null,
       detailMonth: null,
       detailDate: null,
       showDetail: false,
       showUserDropdown: false,
-    };
+    }
   },
   async created() {
-    this.selectedMonth = this.currentMonth;
-    this.selectedYear = this.currentYear;
-    const resp = await api.getUser();
-    this.username = resp.username;
+    this.selectedMonth = this.currentMonth
+    this.selectedYear = this.currentYear
+    const resp = await api.getUser()
+    this.username = resp.username
   },
   computed: {
     months() {
       return {
-        1: "January",
-        2: "Febuary",
-        3: "March",
-        4: "April",
-        5: "May",
-        6: "June",
-        7: "July",
-        8: "August",
-        9: "September",
-        10: "October",
-        11: "November",
-        12: "December",
-      };
+        1: 'January',
+        2: 'Febuary',
+        3: 'March',
+        4: 'April',
+        5: 'May',
+        6: 'June',
+        7: 'July',
+        8: 'August',
+        9: 'September',
+        10: 'October',
+        11: 'November',
+        12: 'December',
+      }
     },
     date() {
-      return new Date();
+      return new Date()
     },
     currentYear() {
-      return this.date.getFullYear();
+      return this.date.getFullYear()
     },
     currentMonth() {
-      return this.date.getMonth() + 1;
+      return this.date.getMonth() + 1
     },
     currentDate() {
-      return this.date.getDate();
+      return this.date.getDate()
     },
     currentDay() {
-      return this.date.getDay();
+      return this.date.getDay()
     },
     gap() {
-      let selectedMonth = this.selectedMonth;
-      let selectedYear = this.selectedYear;
-      let gap = 0;
+      let selectedMonth = this.selectedMonth
+      let selectedYear = this.selectedYear
+      let gap = 0
       if (selectedYear > this.currentYear) {
         while (selectedMonth > 1) {
-          gap += this.findMonthDays(selectedMonth - 1, selectedYear);
-          selectedMonth--;
+          gap += this.findMonthDays(selectedMonth - 1, selectedYear)
+          selectedMonth--
         }
-        selectedYear--;
+        selectedYear--
         while (selectedYear > this.currentYear) {
-          gap += this.isLeapYear(selectedYear) ? 366 : 365;
-          selectedYear--;
+          gap += this.isLeapYear(selectedYear) ? 366 : 365
+          selectedYear--
         }
-        selectedMonth = 13;
+        selectedMonth = 13
       } else if (selectedYear < this.currentYear) {
         while (selectedMonth < 13) {
-          gap += this.findMonthDays(selectedMonth, selectedYear);
-          selectedMonth++;
+          gap += this.findMonthDays(selectedMonth, selectedYear)
+          selectedMonth++
         }
-        selectedYear++;
+        selectedYear++
         while (selectedYear < this.currentYear) {
-          gap += this.isLeapYear(selectedYear) ? 366 : 365;
-          selectedYear++;
+          gap += this.isLeapYear(selectedYear) ? 366 : 365
+          selectedYear++
         }
-        selectedMonth = 1;
+        selectedMonth = 1
       }
 
       if (selectedMonth > this.currentMonth) {
         while (selectedMonth > this.currentMonth) {
-          gap += this.findMonthDays(selectedMonth - 1, selectedYear);
-          selectedMonth--;
+          gap += this.findMonthDays(selectedMonth - 1, selectedYear)
+          selectedMonth--
         }
-        gap = this.currentDay + ((1 + gap - this.currentDate) % 7);
+        gap = this.currentDay + ((1 + gap - this.currentDate) % 7)
       } else if (selectedMonth <= this.currentMonth) {
         while (selectedMonth < this.currentMonth) {
-          gap += this.findMonthDays(selectedMonth, selectedYear);
-          selectedMonth++;
+          gap += this.findMonthDays(selectedMonth, selectedYear)
+          selectedMonth++
         }
-        gap = this.currentDay - ((this.currentDate + gap - 1) % 7);
+        gap = this.currentDay - ((this.currentDate + gap - 1) % 7)
       }
 
-      return gap < 0 ? gap + 7 : gap >= 7 ? gap - 7 : gap;
+      return gap < 0 ? gap + 7 : gap >= 7 ? gap - 7 : gap
     },
   },
   methods: {
     isLeapYear(year) {
-      return year % 400 == 0 || (year % 4 == 0 && year % 100 != 0);
+      return year % 400 == 0 || (year % 4 == 0 && year % 100 != 0)
     },
     findMonthhName(month) {
-      return this.months[month];
+      return this.months[month]
     },
     findMonthDays(month, year) {
       switch (month) {
@@ -178,48 +184,48 @@ export default {
         case 8:
         case 10:
         case 12:
-          return 31;
+          return 31
         case 2:
-          return this.isLeapYear(year) ? 29 : 28;
+          return this.isLeapYear(year) ? 29 : 28
         default:
-          return 30;
+          return 30
       }
     },
     async logIn() {
-      this.$router.push({ name: "LogIn" });
+      this.$router.push({ name: 'LogIn' })
     },
     async logOut() {
-      await api.logOut();
-      this.username = "";
+      await api.logOut()
+      this.username = ''
     },
     prev() {
       if (this.selectedMonth == 1) {
-        this.selectedMonth = 12;
-        this.selectedYear--;
+        this.selectedMonth = 12
+        this.selectedYear--
       } else {
-        this.selectedMonth--;
+        this.selectedMonth--
       }
     },
     next() {
       if (this.selectedMonth == 12) {
-        this.selectedMonth = 1;
-        this.selectedYear++;
+        this.selectedMonth = 1
+        this.selectedYear++
       } else {
-        this.selectedMonth++;
+        this.selectedMonth++
       }
     },
     openDetail(month, date) {
-      this.showDetail = true;
-      this.detailMonth = month;
-      this.detailDate = date;
+      this.showDetail = true
+      this.detailMonth = month
+      this.detailDate = date
     },
     closeDetail() {
-      this.showDetail = false;
-      this.detailMonth = null;
-      this.detailDate = null;
+      this.showDetail = false
+      this.detailMonth = null
+      this.detailDate = null
     },
   },
-};
+}
 </script>
 
 <style lang="scss" scoped>
@@ -356,46 +362,46 @@ export default {
             font-size: 150%;
           }
         }
+      }
     }
-  }
-  
-  .shrink {
-    width: 75%;
-  }
 
-  .detail_container {
-    position: relative;
-    width: 25%;
-    border: 1px solid black;
+    .shrink {
+      width: 75%;
+    }
 
-    .close {
-      cursor: pointer;
-      position: absolute;
-      right: 10px;
-      top: 10px;
-      width: 16px;
-      height: 16px;
-      opacity: 0.3;
+    .detail_container {
+      position: relative;
+      width: 25%;
+      border: 1px solid black;
+
+      .close {
+        cursor: pointer;
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        width: 16px;
+        height: 16px;
+        opacity: 0.3;
+      }
+      .close:hover {
+        opacity: 1;
+      }
+      .close:before,
+      .close:after {
+        position: absolute;
+        left: 7.5px;
+        content: '';
+        height: 16.5px;
+        width: 2px;
+        background-color: black;
+      }
+      .close:before {
+        transform: rotate(45deg);
+      }
+      .close:after {
+        transform: rotate(-45deg);
+      }
     }
-    .close:hover {
-      opacity: 1;
-    }
-    .close:before,
-    .close:after {
-      position: absolute;
-      left: 7.5px;
-      content: "";
-      height: 16.5px;
-      width: 2px;
-      background-color: black;
-    }
-    .close:before {
-      transform: rotate(45deg);
-    }
-    .close:after {
-      transform: rotate(-45deg);
-    }
-  }
   }
 
   .v-enter-from,
