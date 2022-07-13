@@ -14,45 +14,75 @@
     </div>
     <div v-else class="user hover" @click="logIn">log in</div>
     <div class="schedule_container">
-      <div class="calendar_container" :class="{ shrink: showDetail == true }">
-        <div class="year">{{ selectedYear }}</div>
-        <div class="month">
-          <i class="arrow left" @click="prev"></i>
-          <div class="month_title">{{ findMonthhName(selectedMonth) }}</div>
-          <i class="arrow right" @click="next"></i>
-        </div>
-        <div class="week">
-          <div class="name" v-for="(name, index) in days" :key="index">
-            {{ name }}
-          </div>
-        </div>
-        <div class="days">
-          <div class="day" v-for="day in gap" :key="day"></div>
-          <div
-            class="day hover"
-            v-for="date in findMonthDays(selectedMonth, selectedYear)"
-            :key="date"
-            @click="openDetail(selectedMonth, date)"
-          >
-            <div
-              class="date"
-              :class="{
-                today:
-                  date == currentDate &&
-                  selectedMonth == currentMonth &&
-                  selectedYear == currentYear,
-                selected: selectedMonth == detailMonth && date == detailDate,
-              }"
-            >
-              {{ date }}
-            </div>
-          </div>
-        </div>
-      </div>
+      <calendar
+        class="calendar_container"
+        :class="{ shrink: showDetail == true }"
+        @event="openDetail"
+      />
       <Transition>
         <div class="detail_container" v-show="showDetail">
-          <div class="close" @click="closeDetail"></div>
-          <div>{{ detailMonth }} / {{ detailDate }}</div>
+          <div class="detail_close" @click="closeDetail"></div>
+          <div class="detail_date">{{ detailMonth }} / {{ detailDate }}</div>
+          <div class="detail_new" @click="newEvent">New event</div>
+          <div class="detail_event" v-show="showNewEvent">
+            <div class="detail_close" @click="closeNewEvent"></div>
+            <input
+              class="detail_event-title"
+              placeholder="Add Title"
+              v-model="eventTitle"
+            />
+            <div class="detail_event-start">
+              starts:&nbsp;
+              <div class="detail_event-date" @click="openCalendar('start')">
+                {{ eventStartMonth }} / {{ eventStartDate }}
+              </div>
+              <calendar
+                class="calendar_small"
+                :class="{ calendar_end: startOrEnd === 'end' }"
+                v-show="showSmallCalendar"
+                @event="changeEventDate"
+              />
+              &nbsp;&nbsp;
+              <input
+                class="detail_event-time"
+                type="number"
+                min="0"
+                max="24"
+                v-model="eventStartHour"
+              />:
+              <input
+                class="detail_event-time"
+                type="number"
+                min="0"
+                max="60"
+                step="5"
+                v-model="eventStartMinute"
+              />
+            </div>
+            <div class="detail_event-end">
+              ends:&nbsp;
+              <div class="detail_event-date" @click="openCalendar('end')">
+                {{ eventEndMonth }} / {{ eventEndDate }}
+              </div>
+              &nbsp;&nbsp;
+              <input
+                class="detail_event-time"
+                type="number"
+                :min="eventStartHour"
+                max="24"
+                v-model="eventEndHour"
+              />:
+              <input
+                class="detail_event-time"
+                type="number"
+                min="0"
+                max="60"
+                step="5"
+                v-model="eventEndMinute"
+              />
+            </div>
+            <div class="detail_event-save">Save</div>
+          </div>
         </div>
       </Transition>
     </div>
@@ -61,136 +91,37 @@
 
 <script>
 import * as api from '../api'
+import Calendar from '../components/Calendar.vue'
 
 export default {
+  components: { Calendar },
   name: 'Home',
   data() {
     return {
       username: '',
-      days: [
-        'Sunday',
-        'Monday',
-        'Tuesday',
-        'Wednesday',
-        'Thursday',
-        'Friday',
-        'Saturday',
-      ],
-      abbrDays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-      selectedMonth: null,
-      selectedYear: null,
       detailMonth: null,
       detailDate: null,
+      startOrEnd: null,
+      eventTitle: '',
+      eventStartMonth: null,
+      eventStartDate: null,
+      eventEndMonth: null,
+      eventEndDate: null,
+      eventStartHour: 11,
+      eventStartMinute: 0,
+      eventEndHour: 12,
+      eventEndMinute: 0,
       showDetail: false,
+      showNewEvent: false,
       showUserDropdown: false,
+      showSmallCalendar: false,
     }
   },
   async created() {
-    this.selectedMonth = this.currentMonth
-    this.selectedYear = this.currentYear
     const resp = await api.getUser()
     this.username = resp.username
   },
-  computed: {
-    months() {
-      return {
-        1: 'January',
-        2: 'Febuary',
-        3: 'March',
-        4: 'April',
-        5: 'May',
-        6: 'June',
-        7: 'July',
-        8: 'August',
-        9: 'September',
-        10: 'October',
-        11: 'November',
-        12: 'December',
-      }
-    },
-    date() {
-      return new Date()
-    },
-    currentYear() {
-      return this.date.getFullYear()
-    },
-    currentMonth() {
-      return this.date.getMonth() + 1
-    },
-    currentDate() {
-      return this.date.getDate()
-    },
-    currentDay() {
-      return this.date.getDay()
-    },
-    gap() {
-      let selectedMonth = this.selectedMonth
-      let selectedYear = this.selectedYear
-      let gap = 0
-      if (selectedYear > this.currentYear) {
-        while (selectedMonth > 1) {
-          gap += this.findMonthDays(selectedMonth - 1, selectedYear)
-          selectedMonth--
-        }
-        selectedYear--
-        while (selectedYear > this.currentYear) {
-          gap += this.isLeapYear(selectedYear) ? 366 : 365
-          selectedYear--
-        }
-        selectedMonth = 13
-      } else if (selectedYear < this.currentYear) {
-        while (selectedMonth < 13) {
-          gap += this.findMonthDays(selectedMonth, selectedYear)
-          selectedMonth++
-        }
-        selectedYear++
-        while (selectedYear < this.currentYear) {
-          gap += this.isLeapYear(selectedYear) ? 366 : 365
-          selectedYear++
-        }
-        selectedMonth = 1
-      }
-
-      if (selectedMonth > this.currentMonth) {
-        while (selectedMonth > this.currentMonth) {
-          gap += this.findMonthDays(selectedMonth - 1, selectedYear)
-          selectedMonth--
-        }
-        gap = this.currentDay + ((1 + gap - this.currentDate) % 7)
-      } else if (selectedMonth <= this.currentMonth) {
-        while (selectedMonth < this.currentMonth) {
-          gap += this.findMonthDays(selectedMonth, selectedYear)
-          selectedMonth++
-        }
-        gap = this.currentDay - ((this.currentDate + gap - 1) % 7)
-      }
-
-      return gap < 0 ? gap + 7 : gap >= 7 ? gap - 7 : gap
-    },
-  },
   methods: {
-    isLeapYear(year) {
-      return year % 400 == 0 || (year % 4 == 0 && year % 100 != 0)
-    },
-    findMonthhName(month) {
-      return this.months[month]
-    },
-    findMonthDays(month, year) {
-      switch (month) {
-        case 1:
-        case 3:
-        case 5:
-        case 7:
-        case 8:
-        case 10:
-        case 12:
-          return 31
-        case 2:
-          return this.isLeapYear(year) ? 29 : 28
-        default:
-          return 30
-      }
-    },
     async logIn() {
       this.$router.push({ name: 'LogIn' })
     },
@@ -198,24 +129,9 @@ export default {
       await api.logOut()
       this.username = ''
     },
-    prev() {
-      if (this.selectedMonth == 1) {
-        this.selectedMonth = 12
-        this.selectedYear--
-      } else {
-        this.selectedMonth--
-      }
-    },
-    next() {
-      if (this.selectedMonth == 12) {
-        this.selectedMonth = 1
-        this.selectedYear++
-      } else {
-        this.selectedMonth++
-      }
-    },
     openDetail(month, date) {
       this.showDetail = true
+      this.showNewEvent = false
       this.detailMonth = month
       this.detailDate = date
     },
@@ -223,6 +139,32 @@ export default {
       this.showDetail = false
       this.detailMonth = null
       this.detailDate = null
+    },
+    newEvent() {
+      this.showNewEvent = true
+      this.eventStartMonth = this.detailMonth
+      this.eventStartDate = this.detailDate
+      this.eventEndMonth = this.detailMonth
+      this.eventEndDate = this.detailDate
+    },
+    closeNewEvent() {
+      this.showNewEvent = false
+      this.eventMonth = null
+      this.eventDate = null
+    },
+    openCalendar(type) {
+      this.startOrEnd = type
+      this.showSmallCalendar = true
+    },
+    changeEventDate(month, date) {
+      this.showSmallCalendar = false
+      if (this.startOrEnd === 'start') {
+        this.eventStartMonth = month
+        this.eventStartDate = date
+      } else {
+        this.eventEndMonth = month
+        this.eventEndDate = date
+      }
     },
   },
 }
@@ -232,28 +174,7 @@ export default {
 .schedule {
   display: flex;
   flex-direction: column;
-
-  .arrow {
-    border: solid black;
-    border-width: 0 3px 3px 0;
-    display: inline-block;
-    padding: 5px;
-    cursor: pointer;
-  }
-
-  .arrow:hover {
-    opacity: 0.3;
-  }
-
-  .right {
-    transform: rotate(-45deg);
-    -webkit-transform: rotate(-45deg);
-  }
-
-  .left {
-    transform: rotate(135deg);
-    -webkit-transform: rotate(135deg);
-  }
+  text-align: center;
 
   .user {
     position: relative;
@@ -287,94 +208,54 @@ export default {
 
   &_container {
     display: flex;
+    justify-content: center;
 
     .calendar_container {
       width: 100%;
+      max-width: 1600px;
+      min-height: 810px;
       height: 90vh;
+      max-height: 1000px;
       border: 1px solid black;
       display: flex;
       flex-direction: column;
       transition: width 0.5s;
-
-      .year {
-        font-size: 40px;
-        font-weight: 500;
-        margin-top: 10px;
-      }
-
-      .month {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        &_title {
-          font-size: 30px;
-          width: 170px;
-        }
-      }
-
-      .week {
-        display: flex;
-        border-bottom: 1px solid black;
-        padding: 10px 0;
-
-        .name {
-          flex: 1;
-        }
-      }
-
-      .days {
-        margin: 10px;
-        flex: 1;
-        display: flex;
-        flex-wrap: wrap;
-
-        .day {
-          text-align: left;
-          width: calc(100% / 7);
-        }
-
-        .date {
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: transform 0.5s, font-size 0.5s;
-        }
-
-        .today {
-          background-color: orange;
-        }
-
-        .selected {
-          transform: scale(1.5);
-          font-size: 150%;
-        }
-
-        .hover:hover {
-          cursor: pointer;
-          opacity: 1;
-
-          .date {
-            transform: scale(1.5);
-            font-size: 150%;
-          }
-        }
-      }
     }
 
     .shrink {
       width: 75%;
     }
 
-    .detail_container {
-      position: relative;
-      width: 25%;
-      border: 1px solid black;
+    .detail {
+      &_container {
+        position: relative;
+        width: 25%;
+        border: 1px solid black;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
 
-      .close {
+      &_date {
+        align-self: flex-start;
+        font-size: 30px;
+        font-weight: 500;
+        margin: 10px 0 0 10px;
+      }
+
+      &_new {
+        border: 1px solid;
+        border-radius: 10px;
+        padding: 5px;
+        display: inline-block;
+        cursor: pointer;
+      }
+
+      &_new:hover {
+        opacity: 0.3;
+      }
+
+      &_close {
         cursor: pointer;
         position: absolute;
         right: 10px;
@@ -383,11 +264,11 @@ export default {
         height: 16px;
         opacity: 0.3;
       }
-      .close:hover {
+      &_close:hover {
         opacity: 1;
       }
-      .close:before,
-      .close:after {
+      &_close:before,
+      &_close:after {
         position: absolute;
         left: 7.5px;
         content: '';
@@ -395,11 +276,72 @@ export default {
         width: 2px;
         background-color: black;
       }
-      .close:before {
+      &_close:before {
         transform: rotate(45deg);
       }
-      .close:after {
+      &_close:after {
         transform: rotate(-45deg);
+      }
+
+      &_event {
+        border: 1px solid;
+        border-radius: 10px;
+        position: relative;
+        width: 90%;
+        padding: 25px 10px 0 10px;
+
+        &-title {
+          width: 100%;
+          font-size: 20px;
+          border: none;
+          border-bottom: 1px solid;
+          outline: none;
+        }
+
+        &-start,
+        &-end {
+          display: flex;
+          position: relative;
+          font-size: 20px;
+
+          .calendar {
+            &_small {
+              width: 200px;
+              border: 1px solid black;
+              position: absolute;
+              top: 21px;
+              left: 55px;
+              display: flex;
+              flex-direction: column;
+              z-index: 1;
+              font-size: 10px;
+              background-color: white;
+            }
+
+            &_end {
+              top: 49px;
+            }
+          }
+        }
+
+        &-time {
+          font-size: 20px;
+          border: none;
+          outline: none;
+          width: 40px;
+        }
+
+        &-save {
+          cursor: pointer;
+          border: 1px solid;
+          display: inline-block;
+          border-radius: 10px;
+          padding: 3px;
+        }
+
+        &-save:hover {
+          opacity: 0.3;
+        }
       }
     }
   }
