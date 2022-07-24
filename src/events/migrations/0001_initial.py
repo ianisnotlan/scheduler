@@ -15,12 +15,13 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='UserProfile',
+            name='Event',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('photo', models.ImageField(blank=True, null=True, upload_to='')),
-                ('birthday', models.DateField(blank=True, null=True)),
-                ('owner', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('title', models.CharField(max_length=100)),
+                ('start_datetime', models.DateTimeField()),
+                ('end_datetime', models.DateTimeField()),
+                ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
     ]

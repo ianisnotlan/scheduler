@@ -7,29 +7,97 @@
       <i class="arrow right" @click="next"></i>
     </div>
     <div class="week">
-      <div class="name" v-for="(name, index) in days" :key="index">
+      <div class="name" v-for="(name, index) in weekDays" :key="index">
         {{ name }}
       </div>
     </div>
     <div class="days">
-      <div class="day" v-for="day in gap" :key="day"></div>
+      <div class="day" v-for="day in frontGap" :key="day">
+        <div
+          class="date other_month"
+          :class="{
+            disabled: disabledDay(
+              selectedMonth === 1 ? selectedYear - 1 : selectedYear,
+              selectedMonth === 1 ? 12 : selectedMonth - 1,
+              findMonthDays(
+                selectedMonth === 1 ? selectedYear - 1 : selectedYear,
+                selectedMonth === 1 ? 12 : selectedMonth - 1
+              ) -
+                frontGap +
+                day
+            ),
+            hover: !disabledDay(
+              selectedMonth === 1 ? selectedYear - 1 : selectedYear,
+              selectedMonth === 1 ? 12 : selectedMonth - 1,
+              findMonthDays(
+                selectedMonth === 1 ? selectedYear - 1 : selectedYear,
+                selectedMonth === 1 ? 12 : selectedMonth - 1
+              ) -
+                frontGap +
+                day
+            ),
+          }"
+        >
+          {{
+            findMonthDays(
+              selectedMonth === 1 ? selectedYear - 1 : selectedYear,
+              selectedMonth === 1 ? 12 : selectedMonth - 1
+            ) -
+            frontGap +
+            day
+          }}
+        </div>
+      </div>
       <div
-        class="day hover"
-        v-for="date in findMonthDays(selectedMonth, selectedYear)"
-        :key="date"
-        @click="$emit('event', selectedMonth, date)"
+        class="day"
+        v-for="day in findMonthDays(selectedYear, selectedMonth)"
+        :key="day"
+        @click="emitEvent(selectedYear, selectedMonth, day)"
       >
         <div
           class="date"
           :class="{
             today:
-              date == currentDate &&
-              selectedMonth == currentMonth &&
-              selectedYear == currentYear,
-            selected: selectedMonth == detailMonth && date == detailDate,
+              selectedYear === currentYear &&
+              selectedMonth === currentMonth &&
+              day === currentDay,
+            disabled: disabledDay(selectedYear, selectedMonth, day),
+            hover: !disabledDay(selectedYear, selectedMonth, day),
           }"
         >
-          {{ date }}
+          {{ day }}
+        </div>
+        <template v-if="!small">
+          <div
+            v-for="event in eventsOfSelectedDay(
+              selectedYear,
+              selectedMonth,
+              day
+            )"
+            :key="event.id"
+            :style="eventBackgroundColor(event.id)"
+          >
+            {{ event.title }}
+          </div>
+        </template>
+      </div>
+      <div class="day" v-for="day in rearGap" :key="day">
+        <div
+          class="date other_month"
+          :class="{
+            disabled: disabledDay(
+              selectedMonth === 12 ? selectedYear + 1 : selectedYear,
+              selectedMonth === 12 ? 1 : selectedMonth + 1,
+              day
+            ),
+            hover: !disabledDay(
+              selectedMonth === 12 ? selectedYear + 1 : selectedYear,
+              selectedMonth === 12 ? 1 : selectedMonth + 1,
+              day
+            ),
+          }"
+        >
+          {{ day }}
         </div>
       </div>
     </div>
@@ -37,8 +105,25 @@
 </template>
 
 <script>
+import { mapState, mapActions } from 'pinia'
+import { useStore } from '../store'
+import { formatDate, eventBackgroundColor } from '../utils'
+
 export default {
   name: 'Calendar',
+  props: {
+    defaultYear: String,
+    defaultMonth: String,
+    defaultDay: String,
+    disablePreviousDay: {
+      type: Boolean,
+      default: false,
+    },
+    small: {
+      type: Boolean,
+      default: false,
+    },
+  },
   data() {
     return {
       months: {
@@ -55,16 +140,17 @@ export default {
         11: 'November',
         12: 'December',
       },
-      days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-      selectedMonth: null,
+      weekDays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
       selectedYear: null,
+      selectedMonth: null,
     }
   },
   created() {
-    this.selectedMonth = this.currentMonth
-    this.selectedYear = this.currentYear
+    this.selectedYear = this.defaultYear || this.currentYear
+    this.selectedMonth = this.defaultMonth || this.currentMonth
   },
   computed: {
+    ...mapState(useStore, ['eventsOfSelectedDay']),
     date() {
       return new Date()
     },
@@ -74,19 +160,19 @@ export default {
     currentMonth() {
       return this.date.getMonth() + 1
     },
-    currentDate() {
+    currentDay() {
       return this.date.getDate()
     },
-    currentDay() {
+    currentWeekDay() {
       return this.date.getDay()
     },
-    gap() {
+    frontGap() {
       let selectedMonth = this.selectedMonth
       let selectedYear = this.selectedYear
       let gap = 0
       if (selectedYear > this.currentYear) {
         while (selectedMonth > 1) {
-          gap += this.findMonthDays(selectedMonth - 1, selectedYear)
+          gap += this.findMonthDays(selectedYear, selectedMonth - 1)
           selectedMonth--
         }
         selectedYear--
@@ -97,7 +183,7 @@ export default {
         selectedMonth = 13
       } else if (selectedYear < this.currentYear) {
         while (selectedMonth < 13) {
-          gap += this.findMonthDays(selectedMonth, selectedYear)
+          gap += this.findMonthDays(selectedYear, selectedMonth)
           selectedMonth++
         }
         selectedYear++
@@ -110,29 +196,47 @@ export default {
 
       if (selectedMonth > this.currentMonth) {
         while (selectedMonth > this.currentMonth) {
-          gap += this.findMonthDays(selectedMonth - 1, selectedYear)
+          gap += this.findMonthDays(selectedYear, selectedMonth - 1)
           selectedMonth--
         }
-        gap = this.currentDay + ((1 + gap - this.currentDate) % 7)
+        gap = this.currentWeekDay + ((1 + gap - this.currentDay) % 7)
       } else if (selectedMonth <= this.currentMonth) {
         while (selectedMonth < this.currentMonth) {
-          gap += this.findMonthDays(selectedMonth, selectedYear)
+          gap += this.findMonthDays(selectedYear, selectedMonth)
           selectedMonth++
         }
-        gap = this.currentDay - ((this.currentDate + gap - 1) % 7)
+        gap = this.currentWeekDay - ((this.currentDay + gap - 1) % 7)
       }
 
       return gap < 0 ? gap + 7 : gap >= 7 ? gap - 7 : gap
     },
+    rearGap() {
+      const mod =
+        (this.frontGap +
+          this.findMonthDays(this.selectedYear, this.selectedMonth)) %
+        7
+      return mod === 0 ? mod : 7 - mod
+    },
+  },
+  watch: {
+    selectedMonth: {
+      async handler(newVal) {
+        if (!this.small) {
+          await this.getEvents(this.selectedYear, newVal)
+        }
+      },
+      immediate: true,
+    },
   },
   methods: {
+    ...mapActions(useStore, ['getEvents']),
     isLeapYear(year) {
       return year % 400 == 0 || (year % 4 == 0 && year % 100 != 0)
     },
     findMonthhName(month) {
       return this.months[month]
     },
-    findMonthDays(month, year) {
+    findMonthDays(year, month) {
       switch (month) {
         case 1:
         case 3:
@@ -164,8 +268,22 @@ export default {
         this.selectedMonth++
       }
     },
-    openDetail(month, date) {
-      this.$emit('openDetail', month, date)
+    disabledDay(year, month, day) {
+      if (
+        this.disablePreviousDay &&
+        formatDate(year, month, day) <
+          formatDate(this.defaultYear, this.defaultMonth, this.defaultDay)
+      ) {
+        return true
+      }
+      return false
+    },
+    emitEvent(year, month, day) {
+      if (!this.disabledDay(year, month, day))
+        this.$emit('event', year, month, day)
+    },
+    eventBackgroundColor(index) {
+      return eventBackgroundColor(index)
     },
   },
 }
@@ -229,6 +347,14 @@ export default {
   .day {
     text-align: left;
     width: calc(100% / 7);
+    cursor: pointer;
+  }
+
+  .day:hover {
+    .hover {
+      transform: scale(1.5);
+      font-size: 150%;
+    }
   }
 
   .date {
@@ -241,23 +367,16 @@ export default {
     transition: transform 0.5s, font-size 0.5s;
   }
 
+  .other_month {
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .disabled {
+    color: rgba(0, 0, 0, 0.2);
+  }
+
   .today {
     background-color: orange;
-  }
-
-  .selected {
-    transform: scale(1.5);
-    font-size: 150%;
-  }
-
-  .hover:hover {
-    cursor: pointer;
-    opacity: 1;
-
-    .date {
-      transform: scale(1.5);
-      font-size: 150%;
-    }
   }
 }
 </style>

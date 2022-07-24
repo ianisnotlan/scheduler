@@ -1,5 +1,5 @@
 <template>
-  <div class="login_box">
+  <form class="login_box" @submit.prevent="logIn">
     <input
       type="text"
       class="login_input"
@@ -12,7 +12,7 @@
       placeholder="Password"
       v-model="password"
     /><br /><br />
-    <button class="login_button" @click="logIn">Log In</button>
+    <button class="login_button">Log In</button>
     <p v-if="status == 'loginFailed'" class="login_failed">
       the password you've entered is incorrect
     </p>
@@ -20,7 +20,7 @@
     <hr />
     <br />
     <button class="signup_button" @click="signUp">Sign Up</button>
-  </div>
+  </form>
 </template>
 
 <script>

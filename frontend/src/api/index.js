@@ -3,6 +3,21 @@ import axios from 'axios'
 axios.defaults.xsrfHeaderName = 'X-CSRFTOKEN'
 axios.defaults.xsrfCookieName = 'csrftoken'
 
+export async function getUserProfile() {
+  const resp = await axios.get('/api/user-profile/')
+  return resp.data
+}
+
+export async function updateProfile(id, username, email, photo, birthday) {
+  const resp = await axios.patch(`/api/user-profile/${id}/`, {
+    username,
+    email,
+    photo,
+    birthday,
+  })
+  return resp.data
+}
+
 export async function getUser() {
   const resp = await axios.get('/api/user/me/')
   return resp.data
@@ -27,10 +42,30 @@ export async function logOut() {
   return resp.data
 }
 
-export async function update(id) {
-  const resp = await axios.patch(`/api/user/${id}/`, {
-    first_name: 'test',
-    password: 'try',
+export async function getEvents(year, month, day) {
+  const resp = await axios.get('/api/event/', { params: { year, month, day } })
+  return resp.data
+}
+
+export async function newEvent(title, start_datetime, end_datetime) {
+  const resp = await axios.post('/api/event/', {
+    title,
+    start_datetime,
+    end_datetime,
   })
+  return resp.data
+}
+
+export async function updateEvent(id, title, start_datetime, end_datetime) {
+  const resp = await axios.patch(`/api/event/${id}/`, {
+    title,
+    start_datetime,
+    end_datetime,
+  })
+  return resp.data
+}
+
+export async function deleteEvent(id) {
+  const resp = await axios.delete(`/api/event/${id}/`)
   return resp.data
 }
