@@ -3,6 +3,7 @@
     <div class="detail_close" @click="$emit('close')"></div>
     <div class="detail_date">{{ detailDate.month }} / {{ detailDate.day }}</div>
     <div class="button" @click="newEvent">New event</div>
+    <br />
     <div v-if="showLoginPrompt">Please log in to manage your schedule</div>
     <div
       class="detail_eventlist"
@@ -14,7 +15,7 @@
       :style="eventBackgroundColor(event.id)"
       :key="event.id"
     >
-      <div>{{ event.title }}</div>
+      <div class="detail_eventlist-title">{{ event.title }}</div>
       <div>{{ event.start_datetime.month }}/{{ event.start_datetime.day }}</div>
       <div>{{ event.start_datetime.time }}</div>
       -
@@ -74,7 +75,17 @@
           </option>
         </select>
       </div>
-      <div class="edit_container-save button" @click="saveEvent">Save</div>
+      <div class="warning" v-if="titleLimitation">
+        Please make sure title is less than 100 characters
+      </div>
+      <template v-else><br /><br /></template>
+      <button
+        class="edit_container-save button"
+        @click="saveEvent"
+        :disabled="titleLimitation"
+      >
+        Save
+      </button>
     </div>
   </div>
 </template>
@@ -159,6 +170,9 @@ export default {
         return generateTimeOptions(start.time, 'end')
       }
       return generateTimeOptions('00:00')
+    },
+    titleLimitation() {
+      return this.eventTitle.length > 100
     },
   },
   methods: {
@@ -262,6 +276,14 @@ export default {
     align-items: center;
     justify-content: space-around;
     padding: 10px 0;
+
+    &-title {
+      width: 20%;
+      white-space: nowrap;
+      text-align: left;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
   }
 
   &_close {
@@ -291,6 +313,24 @@ export default {
   &_close:after {
     transform: rotate(-45deg);
   }
+}
+
+.button {
+  cursor: pointer;
+  color: black;
+  background-color: inherit;
+  border: 1px solid black;
+  display: inline-block;
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.button:hover {
+  opacity: 0.3;
+}
+
+.warning {
+  color: red;
 }
 
 .edit_container {
@@ -340,20 +380,13 @@ export default {
     }
   }
 
+  &-end {
+    margin-bottom: 10px;
+  }
+
   &-save {
     margin-top: 10px;
+    padding: 6px;
   }
-}
-
-.button {
-  cursor: pointer;
-  border: 1px solid;
-  display: inline-block;
-  border-radius: 10px;
-  padding: 3px;
-}
-
-.button:hover {
-  opacity: 0.3;
 }
 </style>

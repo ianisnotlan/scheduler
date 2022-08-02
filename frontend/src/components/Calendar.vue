@@ -62,6 +62,7 @@
             )"
             :key="event.id"
             :style="eventBackgroundColor(event.id)"
+            class="event_title"
           >
             {{ event.title }}
           </div>
@@ -95,6 +96,7 @@
             )"
             :key="event.id"
             :style="eventBackgroundColor(event.id)"
+            class="event_title"
           >
             {{ event.title }}
           </div>
@@ -124,6 +126,7 @@
             )"
             :key="event.id"
             :style="eventBackgroundColor(event.id)"
+            class="event_title"
           >
             {{ event.title }}
           </div>
@@ -422,5 +425,11 @@ export default {
   .today {
     background-color: orange;
   }
+}
+
+.event_title {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 </style>
