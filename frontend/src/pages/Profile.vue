@@ -1,4 +1,5 @@
 <template>
+  <anchor />
   <div class="profile_box">
     <!-- <img class="profile_photo" :src="photo" /> -->
     <div class="profile_input">
@@ -17,19 +18,34 @@
         </option>
       </select>
       &nbsp;
-      <input type="text" class="day input" v-model="birthday.day" />, &nbsp;
-      <input type="text" class="year input" v-model="birthday.year" />
+      <input
+        type="text"
+        class="day input"
+        placeholder="day"
+        v-model="birthday.day"
+      />, &nbsp;
+      <input
+        type="text"
+        class="year input"
+        placeholder="year"
+        v-model="birthday.year"
+      />
     </div>
     <p v-if="warning" class="warning">{{ warning }}</p>
+    <p v-else-if="saved" class="saved">saved!</p>
     <template v-else><br /><br /></template>
     <button class="save_button" @click="updateProfile">Save</button>
   </div>
 </template>
 
 <script>
+import { mapActions } from 'pinia'
+import { useStore } from '../store'
 import * as api from '../api'
+import Anchor from '../components/Anchor.vue'
 
 export default {
+  components: { Anchor },
   name: 'Profile',
   data() {
     return {
@@ -53,6 +69,7 @@ export default {
         12: 'December',
       },
       warning: null,
+      saved: false,
     }
   },
   async created() {
@@ -63,10 +80,15 @@ export default {
     this.photo = resp.photo
     if (resp.birthday) {
       const date = resp.birthday.split('-')
-      this.birthday = { year: date[0], month: date[1], day: date[2] }
+      this.birthday = {
+        year: Number(date[0]),
+        month: Number(date[1]),
+        day: Number(date[2]),
+      }
     }
   },
   methods: {
+    ...mapActions(useStore, ['getUser']),
     async updateProfile() {
       const birthday = `${this.birthday.year}-${this.birthday.month}-${this.birthday.day}`
       try {
@@ -78,8 +100,11 @@ export default {
           birthday
         )
         this.warning = null
+        this.saved = true
       } catch (err) {
-        if (err.response.data.email)
+        if (err.response.data.username)
+          this.warning = err.response.data.username[0]
+        else if (err.response.data.email)
           this.warning = 'Please enter a valid email address'
         else if (err.response.data.birthday)
           this.warning = 'Please enter a valid date'
@@ -137,7 +162,7 @@ export default {
 
 .day {
   flex: 0;
-  width: 30px;
+  width: 35px;
   text-align: center;
 }
 
@@ -157,6 +182,10 @@ export default {
 
 .warning {
   color: red;
+  font-size: 13px;
+}
+
+.saved {
   font-size: 13px;
 }
 </style>

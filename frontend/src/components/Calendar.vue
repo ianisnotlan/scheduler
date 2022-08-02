@@ -12,41 +12,60 @@
       </div>
     </div>
     <div class="days">
-      <div class="day" v-for="day in frontGap" :key="day">
+      <div
+        class="day"
+        v-for="day in frontGap"
+        :key="day"
+        @click="
+          emitEvent(
+            previousMonth.year,
+            previousMonth.month,
+            findMonthDays(previousMonth.year, previousMonth.month) -
+              frontGap +
+              day
+          )
+        "
+      >
         <div
           class="date other_month"
           :class="{
             disabled: disabledDay(
-              selectedMonth === 1 ? selectedYear - 1 : selectedYear,
-              selectedMonth === 1 ? 12 : selectedMonth - 1,
-              findMonthDays(
-                selectedMonth === 1 ? selectedYear - 1 : selectedYear,
-                selectedMonth === 1 ? 12 : selectedMonth - 1
-              ) -
+              previousMonth.year,
+              previousMonth.month,
+              findMonthDays(previousMonth.year, previousMonth.month) -
                 frontGap +
                 day
             ),
             hover: !disabledDay(
-              selectedMonth === 1 ? selectedYear - 1 : selectedYear,
-              selectedMonth === 1 ? 12 : selectedMonth - 1,
-              findMonthDays(
-                selectedMonth === 1 ? selectedYear - 1 : selectedYear,
-                selectedMonth === 1 ? 12 : selectedMonth - 1
-              ) -
+              previousMonth.year,
+              previousMonth.month,
+              findMonthDays(previousMonth.year, previousMonth.month) -
                 frontGap +
                 day
             ),
           }"
         >
           {{
-            findMonthDays(
-              selectedMonth === 1 ? selectedYear - 1 : selectedYear,
-              selectedMonth === 1 ? 12 : selectedMonth - 1
-            ) -
+            findMonthDays(previousMonth.year, previousMonth.month) -
             frontGap +
             day
           }}
         </div>
+        <template v-if="!small">
+          <div
+            v-for="event in eventsOfSelectedDay(
+              previousMonth.year,
+              previousMonth.month,
+              findMonthDays(previousMonth.year, previousMonth.month) -
+                frontGap +
+                day
+            )"
+            :key="event.id"
+            :style="eventBackgroundColor(event.id)"
+          >
+            {{ event.title }}
+          </div>
+        </template>
       </div>
       <div
         class="day"
@@ -81,24 +100,34 @@
           </div>
         </template>
       </div>
-      <div class="day" v-for="day in rearGap" :key="day">
+      <div
+        class="day"
+        v-for="day in rearGap"
+        :key="day"
+        @click="emitEvent(nextMonth.year, nextMonth.month, day)"
+      >
         <div
           class="date other_month"
           :class="{
-            disabled: disabledDay(
-              selectedMonth === 12 ? selectedYear + 1 : selectedYear,
-              selectedMonth === 12 ? 1 : selectedMonth + 1,
-              day
-            ),
-            hover: !disabledDay(
-              selectedMonth === 12 ? selectedYear + 1 : selectedYear,
-              selectedMonth === 12 ? 1 : selectedMonth + 1,
-              day
-            ),
+            disabled: disabledDay(nextMonth.year, nextMonth.month, day),
+            hover: !disabledDay(nextMonth.year, nextMonth.month, day),
           }"
         >
           {{ day }}
         </div>
+        <template v-if="!small">
+          <div
+            v-for="event in eventsOfSelectedDay(
+              nextMonth.year,
+              nextMonth.month,
+              day
+            )"
+            :key="event.id"
+            :style="eventBackgroundColor(event.id)"
+          >
+            {{ event.title }}
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -148,9 +177,11 @@ export default {
   created() {
     this.selectedYear = this.defaultYear || this.currentYear
     this.selectedMonth = this.defaultMonth || this.currentMonth
+    if (!this.small && this.currentUser)
+      this.getAllEvents(this.selectedYear, this.selectedMonth)
   },
   computed: {
-    ...mapState(useStore, ['eventsOfSelectedDay']),
+    ...mapState(useStore, ['eventsOfSelectedDay', 'currentUser']),
     date() {
       return new Date()
     },
@@ -165,6 +196,20 @@ export default {
     },
     currentWeekDay() {
       return this.date.getDay()
+    },
+    previousMonth() {
+      return {
+        year:
+          this.selectedMonth === 1 ? this.selectedYear - 1 : this.selectedYear,
+        month: this.selectedMonth === 1 ? 12 : this.selectedMonth - 1,
+      }
+    },
+    nextMonth() {
+      return {
+        year:
+          this.selectedMonth === 12 ? this.selectedYear + 1 : this.selectedYear,
+        month: this.selectedMonth === 12 ? 1 : this.selectedMonth + 1,
+      }
     },
     frontGap() {
       let selectedMonth = this.selectedMonth
@@ -219,17 +264,16 @@ export default {
     },
   },
   watch: {
-    selectedMonth: {
-      async handler(newVal) {
-        if (!this.small) {
-          await this.getEvents(this.selectedYear, newVal)
-        }
-      },
-      immediate: true,
+    selectedMonth(newVal, oldVal) {
+      if (!this.small && oldVal !== null) {
+        ;(newVal > oldVal && oldVal !== 1) || newVal === 1
+          ? this.shiftFirst(this.selectedYear, newVal)
+          : this.shiftLast(this.selectedYear, newVal)
+      }
     },
   },
   methods: {
-    ...mapActions(useStore, ['getEvents']),
+    ...mapActions(useStore, ['getAllEvents', 'shiftFirst', 'shiftLast']),
     isLeapYear(year) {
       return year % 400 == 0 || (year % 4 == 0 && year % 100 != 0)
     },

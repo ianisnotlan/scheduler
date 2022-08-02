@@ -15,7 +15,7 @@ COPY ./src /scheduler/src
 
 WORKDIR /scheduler/src
 
-RUN python3 manage.py collectstatic --noinput \
+RUN python3 manage.py collectstatic --noinput --settings=src.prod \
     && python3 manage.py makemigrations \
     && python3 manage.py migrate
 

@@ -3,6 +3,7 @@
     <div class="detail_close" @click="$emit('close')"></div>
     <div class="detail_date">{{ detailDate.month }} / {{ detailDate.day }}</div>
     <div class="button" @click="newEvent">New event</div>
+    <div v-if="showLoginPrompt">Please log in to manage your schedule</div>
     <div
       class="detail_eventlist"
       v-for="event in eventsOfSelectedDay(
@@ -103,6 +104,7 @@ export default {
       eventEndDate: null,
       showEventDetail: false,
       showSmallCalendar: false,
+      showLoginPrompt: false,
       startTimeOptions: null,
     }
   },
@@ -144,7 +146,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(useStore, ['eventsOfSelectedDay']),
+    ...mapState(useStore, ['eventsOfSelectedDay', 'currentUser']),
     endTimeOptions() {
       let start = { ...this.eventStartDate }
       let end = { ...this.eventEndDate }
@@ -160,7 +162,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useStore, ['getEvents']),
+    ...mapActions(useStore, ['getAllEvents']),
     editEvent(event) {
       this.showEventDetail = true
       this.eventTitle = event.title
@@ -169,17 +171,22 @@ export default {
       this.selectedEventId = event.id
     },
     newEvent() {
-      this.showEventDetail = true
-      this.eventTitle = null
-      this.eventStartDate = {
-        ...this.detailDate,
-        time: this.startTimeOptions[0],
+      if (this.currentUser) {
+        this.showEventDetail = true
+        this.eventTitle = null
+        this.eventStartDate = {
+          ...this.detailDate,
+          time: this.startTimeOptions[0],
+        }
+        this.eventEndDate = { ...this.detailDate, time: this.endTimeOptions[0] }
+      } else {
+        this.showLoginPrompt = true
       }
-      this.eventEndDate = { ...this.detailDate, time: this.endTimeOptions[0] }
     },
     async deleteEvent(event) {
       await api.deleteEvent(event.id)
-      await this.getEvents(this.detailDate.year, this.detailDate.month)
+      this.selectedEventId = null
+      await this.getAllEvents(this.detailDate.year, this.detailDate.month)
     },
     async saveEvent() {
       let start = this.eventStartDate
@@ -198,7 +205,7 @@ export default {
         await api.newEvent(this.eventTitle, startDateTime, endDateTime)
       }
       this.closeEventDetail()
-      await this.getEvents(this.detailDate.year, this.detailDate.month)
+      await this.getAllEvents(this.detailDate.year, this.detailDate.month)
     },
     closeEventDetail() {
       this.showEventDetail = false

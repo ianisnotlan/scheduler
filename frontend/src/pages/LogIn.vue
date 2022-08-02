@@ -1,4 +1,5 @@
 <template>
+  <anchor />
   <form class="login_box" @submit.prevent="logIn">
     <input
       type="text"
@@ -25,8 +26,10 @@
 
 <script>
 import { logIn } from '../api'
+import Anchor from '../components/Anchor.vue'
 
 export default {
+  components: { Anchor },
   name: 'LogIn',
   data() {
     return {

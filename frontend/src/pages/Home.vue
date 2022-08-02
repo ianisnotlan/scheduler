@@ -1,11 +1,12 @@
 <template>
+  <anchor />
   <div class="schedule">
-    <div v-if="username" class="user">
+    <div v-if="currentUser" class="user">
       <button
         class="user_name hover"
         @click="showUserDropdown = !showUserDropdown"
       >
-        {{ username }}
+        {{ currentUser }}
       </button>
       <div v-if="showUserDropdown" class="user_dropdown">
         <div class="hover" @click="editProfile">Profile</div>
@@ -30,32 +31,34 @@
 </template>
 
 <script>
+import { mapActions, mapState } from 'pinia'
+import { useStore } from '../store'
 import * as api from '../api'
 import Calendar from '../components/Calendar.vue'
 import Detail from '../components/Detail.vue'
+import Anchor from '../components/Anchor.vue'
 
 export default {
-  components: { Calendar, Detail },
+  components: { Calendar, Detail, Anchor },
   name: 'Home',
   data() {
     return {
-      username: null,
       detailDate: null,
       showDetail: false,
       showUserDropdown: false,
     }
   },
-  async created() {
-    const resp = await api.getUser()
-    this.username = resp.username
+  computed: {
+    ...mapState(useStore, ['currentUser']),
   },
   methods: {
+    ...mapActions(useStore, ['getUser']),
     async logIn() {
       this.$router.push({ name: 'LogIn' })
     },
     async logOut() {
       await api.logOut()
-      this.username = null
+      location.reload()
     },
     editProfile() {
       this.$router.push({ name: 'Profile' })
