@@ -110,7 +110,7 @@ export default {
     return {
       startOrEnd: null,
       selectedEventId: null,
-      eventTitle: null,
+      eventTitle: '',
       eventStartDate: null,
       eventEndDate: null,
       showEventDetail: false,
@@ -187,12 +187,13 @@ export default {
     newEvent() {
       if (this.currentUser) {
         this.showEventDetail = true
-        this.eventTitle = null
+        this.eventTitle = ''
         this.eventStartDate = {
           ...this.detailDate,
           time: this.startTimeOptions[0],
         }
-        this.eventEndDate = { ...this.detailDate, time: this.endTimeOptions[0] }
+        this.eventEndDate = { ...this.detailDate }
+        this.eventEndDate.time = this.endTimeOptions[0]
       } else {
         this.showLoginPrompt = true
       }
