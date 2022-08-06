@@ -139,7 +139,7 @@
 <script>
 import { mapState, mapActions } from 'pinia'
 import { useStore } from '../store'
-import { formatDate, eventBackgroundColor } from '../utils'
+import { formatDate, chooseColor } from '../utils'
 
 export default {
   name: 'Calendar',
@@ -330,7 +330,7 @@ export default {
         this.$emit('event', year, month, day)
     },
     eventBackgroundColor(index) {
-      return eventBackgroundColor(index)
+      return { backgroundColor: chooseColor(index) }
     },
   },
 }

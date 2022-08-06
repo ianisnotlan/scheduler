@@ -15,14 +15,20 @@
       :style="eventBackgroundColor(event.id)"
       :key="event.id"
     >
-      <div class="detail_eventlist-title">{{ event.title }}</div>
-      <div>{{ event.start_datetime.month }}/{{ event.start_datetime.day }}</div>
-      <div>{{ event.start_datetime.time }}</div>
-      -
-      <div>{{ event.end_datetime.month }}/{{ event.end_datetime.day }}</div>
-      <div>{{ event.end_datetime.time }}</div>
-      <div class="button" @click="editEvent(event)">edit</div>
-      <div class="button" @click="deleteEvent(event)">delete</div>
+      <div class="information">
+        <div class="information-title">{{ event.title }}</div>
+        <div>
+          {{ event.start_datetime.month }}/{{ event.start_datetime.day }}
+        </div>
+        <div>{{ event.start_datetime.time }}</div>
+        -
+        <div>{{ event.end_datetime.month }}/{{ event.end_datetime.day }}</div>
+        <div>{{ event.end_datetime.time }}</div>
+      </div>
+      <div class="edit_delete">
+        <div class="button" @click="editEvent(event)">edit</div>
+        <div class="button" @click="deleteEvent(event)">delete</div>
+      </div>
     </div>
     <div v-if="showEventDetail" class="backdrop" />
     <div class="edit_container" v-if="showEventDetail">
@@ -93,7 +99,7 @@
 <script>
 import { mapState, mapActions } from 'pinia'
 import { useStore } from '../store'
-import { formatDate, generateTimeOptions, eventBackgroundColor } from '../utils'
+import { formatDate, generateTimeOptions, chooseColor } from '../utils'
 import * as api from '../api'
 import Calendar from './Calendar.vue'
 
@@ -242,7 +248,7 @@ export default {
       this.showSmallCalendar = false
     },
     eventBackgroundColor(index) {
-      return eventBackgroundColor(index)
+      return { backgroundColor: chooseColor(index) }
     },
   },
 }
@@ -273,17 +279,43 @@ export default {
 
   &_eventlist {
     width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    padding: 10px 0;
+    position: relative;
 
-    &-title {
-      width: 20%;
-      white-space: nowrap;
-      text-align: left;
-      text-overflow: ellipsis;
-      overflow: hidden;
+    .information {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 10px 0;
+
+      &-title {
+        width: 30%;
+        white-space: nowrap;
+        text-align: left;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+    }
+
+    .edit_delete {
+      display: none;
+    }
+  }
+
+  &_eventlist:hover {
+    .information {
+      opacity: 0.1;
+    }
+
+    .edit_delete {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      column-gap: 10px;
+      padding: 6px 0;
     }
   }
 
@@ -327,7 +359,7 @@ export default {
 }
 
 .button:hover {
-  opacity: 0.3;
+  opacity: 0.5;
 }
 
 .warning {
@@ -379,6 +411,12 @@ export default {
     .end {
       top: 49px;
     }
+  }
+
+  &-date:hover {
+    cursor: pointer;
+    transition: transform 0.5s;
+    transform: scale(1.1);
   }
 
   &-end {

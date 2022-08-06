@@ -35,7 +35,7 @@ export function generateTimeOptions(time, type = 'start') {
   return timeOptions
 }
 
-export function eventBackgroundColor(index) {
+export function chooseColor(index) {
   let h = (index % 15) * (360 / 15)
-  return { backgroundColor: `hsl(${h}, 100%, 85%)` }
+  return `hsl(${h}, 100%, 85%)`
 }
