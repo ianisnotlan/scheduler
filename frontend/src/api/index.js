@@ -18,6 +18,11 @@ export async function updateProfile(id, username, email, photo, birthday) {
   return resp.data
 }
 
+export async function getUserList() {
+  const resp = await axios.get('/api/user/')
+  return resp.data
+}
+
 export async function getUser() {
   const resp = await axios.get('/api/user/me/')
   return resp.data
@@ -47,20 +52,37 @@ export async function getEvents(year, month, day) {
   return resp.data
 }
 
-export async function newEvent(title, start_datetime, end_datetime) {
+export async function newEvent(
+  title,
+  start_datetime,
+  end_datetime,
+  creator,
+  shared_users
+) {
   const resp = await axios.post('/api/event/', {
     title,
     start_datetime,
     end_datetime,
+    creator,
+    shared_users,
   })
   return resp.data
 }
 
-export async function updateEvent(id, title, start_datetime, end_datetime) {
+export async function updateEvent(
+  id,
+  title,
+  start_datetime,
+  end_datetime,
+  creator,
+  shared_users
+) {
   const resp = await axios.patch(`/api/event/${id}/`, {
     title,
     start_datetime,
     end_datetime,
+    creator,
+    shared_users,
   })
   return resp.data
 }

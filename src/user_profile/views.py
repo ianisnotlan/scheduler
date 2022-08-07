@@ -11,6 +11,11 @@ from .serializers import UserSerializer, UserProfileSerializer
 User = get_user_model()
 
 class UserViewSet(ViewSet):
+    def list(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
     @action(detail=False, methods=['GET'])
     def me(self, request):
         serializer = UserSerializer(request.user)

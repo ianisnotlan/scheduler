@@ -1,6 +1,6 @@
 <template>
   <anchor />
-  <div class="signup_box">
+  <form class="signup_box" @submit.prevent="signUp">
     <input
       type="text"
       class="signup_input"
@@ -14,7 +14,7 @@
       v-model="password"
     /><br /><br />
     <input
-      type="email"
+      type="text"
       class="signup_input"
       placeholder="email (optional)"
       v-model="email"
@@ -23,8 +23,8 @@
     <template v-else><br /><br /></template>
     <hr />
     <br />
-    <button class="signup_button" @click="signUp">Sign Up</button>
-  </div>
+    <button class="signup_button">Sign Up</button>
+  </form>
 </template>
 
 <script>

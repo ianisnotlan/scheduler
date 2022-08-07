@@ -1,5 +1,6 @@
 import datetime
 from django.db.models import Q
+from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
@@ -7,11 +8,14 @@ from rest_framework.mixins import CreateModelMixin, UpdateModelMixin, DestroyMod
 from .serializers import EventSerializer
 from .models import Event
 
+User = get_user_model()
+
 class EventViewSet(GenericViewSet, CreateModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = EventSerializer
 
     def get_queryset(self):
-        events = Event.objects.filter(owner=self.request.user)
+        events = Event.objects.filter(Q(creator=self.request.user) | Q(shared_users=self.request.user))
+        events = events.distinct()
         return events
 
     def list(self, request):
@@ -31,9 +35,5 @@ class EventViewSet(GenericViewSet, CreateModelMixin, UpdateModelMixin, DestroyMo
             queryset = queryset.filter(Q(start_datetime__lt=f'{int(year)+1}-1-1') & Q(end_datetime__gt=f'{year}-1-1'))
             
         queryset = queryset.order_by('start_datetime', '-end_datetime')
-        serializer = EventSerializer(queryset, many=True)
+        serializer = self.get_serializer(queryset, many=True)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
-
-    def perform_create(self, serializer):
-        serializer.validated_data['owner'] = self.request.user
-        serializer.save()

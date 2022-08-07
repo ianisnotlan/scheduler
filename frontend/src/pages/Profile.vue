@@ -90,7 +90,10 @@ export default {
   methods: {
     ...mapActions(useStore, ['getUser']),
     async updateProfile() {
-      const birthday = `${this.birthday.year}-${this.birthday.month}-${this.birthday.day}`
+      let birthday
+      if (this.birthday.year && this.birthday.month && this.birthday.day)
+        birthday = `${this.birthday.year}-${this.birthday.month}-${this.birthday.day}`
+      else birthday = null
       try {
         await api.updateProfile(
           this.id,

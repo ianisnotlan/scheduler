@@ -23,7 +23,7 @@ export const useStore = defineStore('main', {
             let start = event.start_datetime.split('T')[0].replaceAll('-', '')
             let end = event.end_datetime.split('T')[0].replaceAll('-', '')
             if (start <= selected && selected <= end) {
-              let evt = { ...event }
+              let evt = { ...event, shared_users: [...event.shared_users] }
               evt.start_datetime = formatDatetime(evt.start_datetime)
               evt.end_datetime = formatDatetime(evt.end_datetime)
               if (

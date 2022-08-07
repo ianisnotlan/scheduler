@@ -1,6 +1,6 @@
 <template>
   <div class="detail_container">
-    <div class="detail_close" @click="$emit('close')"></div>
+    <div class="detail_close close" @click="$emit('close')">&times;</div>
     <div class="detail_date">{{ detailDate.month }} / {{ detailDate.day }}</div>
     <div class="button" @click="newEvent">New event</div>
     <br />
@@ -25,14 +25,20 @@
         <div>{{ event.end_datetime.month }}/{{ event.end_datetime.day }}</div>
         <div>{{ event.end_datetime.time }}</div>
       </div>
-      <div class="edit_delete">
+      <div class="edit_share_delete">
         <div class="button" @click="editEvent(event)">edit</div>
-        <div class="button" @click="deleteEvent(event)">delete</div>
+        <div
+          v-if="event.creator === currentUser"
+          class="button"
+          @click="deleteEvent(event)"
+        >
+          delete
+        </div>
       </div>
     </div>
     <div v-if="showEventDetail" class="backdrop" />
     <div class="edit_container" v-if="showEventDetail">
-      <div class="detail_close" @click="closeEventDetail"></div>
+      <div class="detail_close close" @click="closeEventDetail">&times;</div>
       <input
         class="edit_container-title"
         placeholder="Add Title"
@@ -81,15 +87,43 @@
           </option>
         </select>
       </div>
-      <div class="warning" v-if="titleLimitation">
-        Please make sure title is less than 100 characters
+      <div class="edit_container-creator">creator: {{ eventCreator }}</div>
+      <div class="edit_container-shared">
+        <div>shared users:</div>
+        <div class="edit_container-searchbox">
+          <input
+            class="search"
+            placeholder="manage with others"
+            v-model="userInSearch"
+          />
+          <div v-if="userSearchResult.length" class="result">
+            <div
+              class="each"
+              v-for="user in userSearchResult"
+              :key="user"
+              @click="addSharedUser(user)"
+            >
+              {{ user }}
+            </div>
+          </div>
+        </div>
+        <div class="notice">notice: only creator can delete the event</div>
+        <div v-if="eventSharedUsers.length" class="edit_container-sharedusers">
+          <div class="user" v-for="user in eventSharedUsers" :key="user">
+            <div>{{ user }}</div>
+            <div class="close" @click="removeSharedUser(user)">&times;</div>
+          </div>
+        </div>
       </div>
-      <template v-else><br /><br /></template>
-      <button
-        class="edit_container-save button"
-        @click="saveEvent"
-        :disabled="titleLimitation"
-      >
+      <div v-if="showWarning">
+        <div class="warning" v-if="titleLimitation">
+          Please make sure title is less than 100 characters
+        </div>
+        <div class="warning" v-else-if="!eventTitle">
+          Title may not be blank
+        </div>
+      </div>
+      <button class="edit_container-save button" @click="saveEvent">
         Save
       </button>
     </div>
@@ -116,17 +150,30 @@ export default {
     return {
       startOrEnd: null,
       selectedEventId: null,
-      eventTitle: '',
+      eventTitle: null,
       eventStartDate: null,
       eventEndDate: null,
+      eventCreator: null,
+      eventSharedUsers: null,
       showEventDetail: false,
       showSmallCalendar: false,
       showLoginPrompt: false,
       startTimeOptions: null,
+      userList: [],
+      userInSearch: null,
+      userSearchResult: [],
+      showWarning: false,
     }
   },
   async created() {
-    this.startTimeOptions = generateTimeOptions('00:00')
+    if (this.currentUser) {
+      this.startTimeOptions = generateTimeOptions('00:00')
+      this.userList = await api.getUserList()
+      let index = this.userList.findIndex(
+        (user) => user.username == this.currentUser
+      )
+      this.userList.splice(index, 1)
+    }
   },
   watch: {
     detailDate() {
@@ -161,6 +208,15 @@ export default {
       },
       deep: true,
     },
+    userInSearch(val) {
+      this.userSearchResult = []
+      if (!val) return
+      for (let user of this.userList) {
+        if (user.username.toLowerCase().search(val) != -1) {
+          this.userSearchResult.push(user.username)
+        }
+      }
+    },
   },
   computed: {
     ...mapState(useStore, ['eventsOfSelectedDay', 'currentUser']),
@@ -183,13 +239,6 @@ export default {
   },
   methods: {
     ...mapActions(useStore, ['getAllEvents']),
-    editEvent(event) {
-      this.showEventDetail = true
-      this.eventTitle = event.title
-      this.eventStartDate = { ...event.start_datetime }
-      this.eventEndDate = { ...event.end_datetime }
-      this.selectedEventId = event.id
-    },
     newEvent() {
       if (this.currentUser) {
         this.showEventDetail = true
@@ -200,9 +249,29 @@ export default {
         }
         this.eventEndDate = { ...this.detailDate }
         this.eventEndDate.time = this.endTimeOptions[0]
+        this.eventCreator = this.currentUser
+        this.eventSharedUsers = []
       } else {
         this.showLoginPrompt = true
       }
+    },
+    editEvent(event) {
+      this.showEventDetail = true
+      this.eventTitle = event.title
+      this.eventStartDate = { ...event.start_datetime }
+      this.eventEndDate = { ...event.end_datetime }
+      this.eventCreator = event.creator
+      this.eventSharedUsers = event.shared_users
+      this.selectedEventId = event.id
+    },
+    addSharedUser(user) {
+      this.userInSearch = null
+      if (!this.eventSharedUsers.find((usr) => usr === user))
+        this.eventSharedUsers.push(user)
+    },
+    removeSharedUser(user) {
+      let index = this.eventSharedUsers.indexOf(user)
+      this.eventSharedUsers.splice(index, 1)
     },
     async deleteEvent(event) {
       await api.deleteEvent(event.id)
@@ -210,6 +279,10 @@ export default {
       await this.getAllEvents(this.detailDate.year, this.detailDate.month)
     },
     async saveEvent() {
+      if (this.titleLimitation || !this.eventTitle) {
+        this.showWarning = true
+        return
+      }
       let start = this.eventStartDate
       let end = this.eventEndDate
       let startDateTime = `${start.year}-${start.month}-${start.day}T${start.time}`
@@ -219,18 +292,28 @@ export default {
           this.selectedEventId,
           this.eventTitle,
           startDateTime,
-          endDateTime
+          endDateTime,
+          this.eventCreator,
+          this.eventSharedUsers
         )
         this.selectedEventId = null
       } else {
-        await api.newEvent(this.eventTitle, startDateTime, endDateTime)
+        await api.newEvent(
+          this.eventTitle,
+          startDateTime,
+          endDateTime,
+          this.eventCreator,
+          this.eventSharedUsers
+        )
       }
-      this.closeEventDetail()
       await this.getAllEvents(this.detailDate.year, this.detailDate.month)
+      this.closeEventDetail()
     },
     closeEventDetail() {
       this.showEventDetail = false
       this.showSmallCalendar = false
+      this.showWarning = false
+      this.userInSearch = null
     },
     openCalendar(type) {
       this.showSmallCalendar = type
@@ -297,7 +380,7 @@ export default {
       }
     }
 
-    .edit_delete {
+    .edit_share_delete {
       display: none;
     }
   }
@@ -307,7 +390,7 @@ export default {
       opacity: 0.1;
     }
 
-    .edit_delete {
+    .edit_share_delete {
       position: absolute;
       top: 0;
       width: 100%;
@@ -320,32 +403,20 @@ export default {
   }
 
   &_close {
-    cursor: pointer;
     position: absolute;
     right: 10px;
-    top: 10px;
-    width: 16px;
-    height: 16px;
-    opacity: 0.3;
+    top: 5px;
+    transform: scale(1.8);
   }
-  &_close:hover {
-    opacity: 1;
-  }
-  &_close:before,
-  &_close:after {
-    position: absolute;
-    left: 7.5px;
-    content: '';
-    height: 16.5px;
-    width: 2px;
-    background-color: black;
-  }
-  &_close:before {
-    transform: rotate(45deg);
-  }
-  &_close:after {
-    transform: rotate(-45deg);
-  }
+}
+
+.close {
+  cursor: pointer;
+  opacity: 0.3;
+}
+
+.close:hover {
+  opacity: 1;
 }
 
 .button {
@@ -360,10 +431,6 @@ export default {
 
 .button:hover {
   opacity: 0.5;
-}
-
-.warning {
-  color: red;
 }
 
 .edit_container {
@@ -419,13 +486,87 @@ export default {
     transform: scale(1.1);
   }
 
-  &-end {
-    margin-bottom: 10px;
+  &-creator {
+    margin-top: 10px;
+    display: flex;
+    font-size: 20px;
+  }
+
+  &-shared {
+    margin-top: 10px;
+    position: relative;
+    text-align: left;
+    font-size: 20px;
+
+    .notice {
+      font-size: 14px;
+    }
+  }
+
+  &-searchbox {
+    position: absolute;
+    left: 120px;
+    top: 4px;
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+
+    .search {
+      width: 97%;
+    }
+
+    .result {
+      border: 1px solid;
+      border-top: 0;
+      width: 100%;
+      z-index: 5;
+      background-color: white;
+
+      .each {
+        width: 98%;
+        padding-left: 3px;
+        font-size: 15px;
+        text-align: left;
+        white-space: nowrap;
+        text-align: left;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+
+      .each:hover {
+        cursor: pointer;
+        background-color: rgba(0, 0, 0, 0.3);
+      }
+    }
+  }
+
+  &-sharedusers {
+    margin-top: 6px;
+    display: flex;
+    max-width: 100%;
+    overflow: scroll;
+
+    .user {
+      cursor: pointer;
+      color: black;
+      background-color: white;
+      border: 1px solid black;
+      display: flex;
+      border-radius: 10px;
+      padding: 0 5px;
+      margin-right: 4px;
+      font-size: 18px;
+    }
   }
 
   &-save {
-    margin-top: 10px;
+    margin-top: 6px;
     padding: 6px;
   }
+}
+
+.warning {
+  margin-top: 10px;
+  color: red;
 }
 </style>
