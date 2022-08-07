@@ -275,7 +275,6 @@ export default {
     },
     async deleteEvent(event) {
       await api.deleteEvent(event.id)
-      this.selectedEventId = null
       await this.getAllEvents(this.detailDate.year, this.detailDate.month)
     },
     async saveEvent() {
@@ -296,7 +295,6 @@ export default {
           this.eventCreator,
           this.eventSharedUsers
         )
-        this.selectedEventId = null
       } else {
         await api.newEvent(
           this.eventTitle,
@@ -314,6 +312,7 @@ export default {
       this.showSmallCalendar = false
       this.showWarning = false
       this.userInSearch = null
+      this.selectedEventId = null
     },
     openCalendar(type) {
       this.showSmallCalendar = type
