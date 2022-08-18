@@ -1,30 +1,32 @@
 <template>
-  <anchor />
-  <form class="signup_box" @submit.prevent="signUp">
-    <input
-      type="text"
-      class="signup_input"
-      placeholder="Username"
-      v-model="username"
-    /><br /><br />
-    <input
-      type="password"
-      class="signup_input"
-      placeholder="Password"
-      v-model="password"
-    /><br /><br />
-    <input
-      type="text"
-      class="signup_input"
-      placeholder="email (optional)"
-      v-model="email"
-    />
-    <p v-if="warning" class="warning">{{ warning }}</p>
-    <template v-else><br /><br /></template>
-    <hr />
-    <br />
-    <button class="signup_button">Sign Up</button>
-  </form>
+  <div>
+    <anchor />
+    <form class="signup_box" @submit.prevent="signUp">
+      <input
+        type="text"
+        class="signup_input"
+        placeholder="Username"
+        v-model="username"
+      /><br /><br />
+      <input
+        type="password"
+        class="signup_input"
+        placeholder="Password"
+        v-model="password"
+      /><br /><br />
+      <input
+        type="text"
+        class="signup_input"
+        placeholder="email (optional)"
+        v-model="email"
+      />
+      <p v-if="warning" class="warning">{{ warning }}</p>
+      <template v-else><br /><br /></template>
+      <hr />
+      <br />
+      <button class="signup_button">Sign Up</button>
+    </form>
+  </div>
 </template>
 
 <script>

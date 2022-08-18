@@ -1,40 +1,42 @@
 <template>
-  <anchor />
-  <div class="profile_box">
-    <!-- <img class="profile_photo" :src="photo" /> -->
-    <div class="profile_input">
-      username:&nbsp;<input type="text" class="input" v-model="username" />
+  <div>
+    <anchor />
+    <div class="profile_box">
+      <!-- <img class="profile_photo" :src="photo" /> -->
+      <div class="profile_input">
+        username:&nbsp;<input type="text" class="input" v-model="username" />
+      </div>
+      <br />
+      <div class="profile_input">
+        email:&nbsp;<input type="email" class="input" v-model="email" />
+      </div>
+      <br />
+      <div class="profile_input">
+        birthday:&nbsp;
+        <select v-model="birthday.month">
+          <option v-for="(option, key) in monthOptions" :key="key" :value="key">
+            {{ option }}
+          </option>
+        </select>
+        &nbsp;
+        <input
+          type="text"
+          class="day input"
+          placeholder="day"
+          v-model="birthday.day"
+        />, &nbsp;
+        <input
+          type="text"
+          class="year input"
+          placeholder="year"
+          v-model="birthday.year"
+        />
+      </div>
+      <p v-if="warning" class="warning">{{ warning }}</p>
+      <p v-else-if="saved" class="saved">saved!</p>
+      <template v-else><br /><br /></template>
+      <button class="save_button" @click="updateProfile">Save</button>
     </div>
-    <br />
-    <div class="profile_input">
-      email:&nbsp;<input type="email" class="input" v-model="email" />
-    </div>
-    <br />
-    <div class="profile_input">
-      birthday:&nbsp;
-      <select v-model="birthday.month">
-        <option v-for="(option, key) in monthOptions" :key="key" :value="key">
-          {{ option }}
-        </option>
-      </select>
-      &nbsp;
-      <input
-        type="text"
-        class="day input"
-        placeholder="day"
-        v-model="birthday.day"
-      />, &nbsp;
-      <input
-        type="text"
-        class="year input"
-        placeholder="year"
-        v-model="birthday.year"
-      />
-    </div>
-    <p v-if="warning" class="warning">{{ warning }}</p>
-    <p v-else-if="saved" class="saved">saved!</p>
-    <template v-else><br /><br /></template>
-    <button class="save_button" @click="updateProfile">Save</button>
   </div>
 </template>
 

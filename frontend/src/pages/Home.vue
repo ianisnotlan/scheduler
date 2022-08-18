@@ -1,31 +1,33 @@
 <template>
-  <anchor />
-  <div class="schedule">
-    <div v-if="currentUser" class="user">
-      <button
-        class="user_name hover"
-        @click="showUserDropdown = !showUserDropdown"
-      >
-        {{ currentUser }}
-      </button>
-      <div v-if="showUserDropdown" class="user_dropdown">
-        <div class="hover" @click="editProfile">Profile</div>
-        <div class="hover" @click="logOut">Log out</div>
+  <div>
+    <anchor />
+    <div class="schedule">
+      <div v-if="currentUser" class="user">
+        <button
+          class="user_name hover"
+          @click="showUserDropdown = !showUserDropdown"
+        >
+          {{ currentUser }}
+        </button>
+        <div v-if="showUserDropdown" class="user_dropdown">
+          <div class="hover" @click="editProfile">Profile</div>
+          <div class="hover" @click="logOut">Log out</div>
+        </div>
       </div>
-    </div>
-    <div v-else class="user hover" @click="logIn">log in</div>
-    <div class="schedule_container">
-      <calendar
-        class="calendar_container"
-        :class="{ shrink: showDetail == true }"
-        @event="openDetail"
-      />
-      <detail
-        v-if="showDetail"
-        :detailDate="detailDate"
-        @close="showDetail = false"
-        class="detail_container"
-      />
+      <div v-else class="user hover" @click="logIn">log in</div>
+      <div class="schedule_container">
+        <calendar
+          class="calendar_container"
+          :class="{ shrink: showDetail == true }"
+          @event="openDetail"
+        />
+        <detail
+          v-if="showDetail"
+          :detailDate="detailDate"
+          @close="showDetail = false"
+          class="detail_container"
+        />
+      </div>
     </div>
   </div>
 </template>

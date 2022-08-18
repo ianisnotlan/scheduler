@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import { useStore } from '../store'
 import Home from '../pages/Home.vue'
 import LogIn from '../pages/LogIn.vue'
@@ -10,9 +10,13 @@ const routes = [
     path: '/',
     name: 'Home',
     component: Home,
-    beforeEnter: async () => {
-      const store = useStore()
-      await store.getUser()
+    beforeEnter: async (to, from, next) => {
+      try {
+        const store = useStore()
+        await store.getUser()
+      } finally {
+        next()
+      }
     },
   },
   {
@@ -48,7 +52,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes,
 })
 
