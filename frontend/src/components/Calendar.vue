@@ -197,9 +197,6 @@ export default {
     currentDay() {
       return this.date.getDate()
     },
-    currentWeekDay() {
-      return this.date.getDay()
-    },
     previousMonth() {
       return {
         year:
@@ -215,48 +212,9 @@ export default {
       }
     },
     frontGap() {
-      let selectedMonth = this.selectedMonth
-      let selectedYear = this.selectedYear
-      let gap = 0
-      if (selectedYear > this.currentYear) {
-        while (selectedMonth > 1) {
-          gap += this.findMonthDays(selectedYear, selectedMonth - 1)
-          selectedMonth--
-        }
-        selectedYear--
-        while (selectedYear > this.currentYear) {
-          gap += this.isLeapYear(selectedYear) ? 366 : 365
-          selectedYear--
-        }
-        selectedMonth = 13
-      } else if (selectedYear < this.currentYear) {
-        while (selectedMonth < 13) {
-          gap += this.findMonthDays(selectedYear, selectedMonth)
-          selectedMonth++
-        }
-        selectedYear++
-        while (selectedYear < this.currentYear) {
-          gap += this.isLeapYear(selectedYear) ? 366 : 365
-          selectedYear++
-        }
-        selectedMonth = 1
-      }
-
-      if (selectedMonth > this.currentMonth) {
-        while (selectedMonth > this.currentMonth) {
-          gap += this.findMonthDays(selectedYear, selectedMonth - 1)
-          selectedMonth--
-        }
-        gap = this.currentWeekDay + ((1 + gap - this.currentDay) % 7)
-      } else if (selectedMonth <= this.currentMonth) {
-        while (selectedMonth < this.currentMonth) {
-          gap += this.findMonthDays(selectedYear, selectedMonth)
-          selectedMonth++
-        }
-        gap = this.currentWeekDay - ((this.currentDay + gap - 1) % 7)
-      }
-
-      return gap < 0 ? gap + 7 : gap >= 7 ? gap - 7 : gap
+      const firstDay = new Date(this.selectedYear, this.selectedMonth - 1, 1)
+      const weekDay = firstDay.getDay()
+      return weekDay
     },
     rearGap() {
       const mod =
