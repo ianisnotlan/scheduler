@@ -18,6 +18,8 @@ COPY ./src /scheduler/src
 
 WORKDIR /scheduler/src
 
-RUN python3 manage.py collectstatic --noinput --settings=src.prod
+RUN python3 manage.py collectstatic --noinput --settings=src.prod \
+    && python manage.py makemigrations --settings=src.prod \
+    && python manage.py migrate --settings=src.prod
 
 CMD uwsgi --ini uwsgi.ini
