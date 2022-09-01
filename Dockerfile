@@ -20,6 +20,9 @@ WORKDIR /scheduler/src
 
 RUN python3 manage.py collectstatic --noinput --settings=src.prod \
     && python manage.py makemigrations --settings=src.prod \
-    && python manage.py migrate --settings=src.prod
+    && python manage.py migrate --settings=src.prod \
+    && chmod o+w /scheduler \
+    && chmod o+w /scheduler/src \
+    && chmod o+w db.sqlite3
 
 CMD uwsgi --ini uwsgi.ini
