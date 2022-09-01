@@ -39,3 +39,16 @@ export function chooseColor(index) {
   let h = (index % 15) * (360 / 15)
   return `hsl(${h}, 100%, 85%)`
 }
+
+function pushToDataLayer(data) {
+  window.dataLayer = window.dataLayer || []
+  window.dataLayer.push(data)
+}
+
+export function tracker(event, param) {
+  const data = {
+    event,
+    ...param
+  }
+  pushToDataLayer(data)
+}

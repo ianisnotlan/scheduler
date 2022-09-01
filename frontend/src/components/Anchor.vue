@@ -3,11 +3,14 @@
 </template>
 
 <script>
+import { tracker } from '../utils'
+
 export default {
   name: 'Anchor',
   methods: {
     goHome() {
       this.$router.push({ name: 'Home' })
+      tracker('clickAnchor')
     },
   },
 }

@@ -39,6 +39,7 @@ import * as api from '../api'
 import Calendar from '../components/Calendar.vue'
 import Detail from '../components/Detail.vue'
 import Anchor from '../components/Anchor.vue'
+import { tracker } from '../utils'
 
 export default {
   components: { Calendar, Detail, Anchor },
@@ -64,6 +65,7 @@ export default {
     },
     editProfile() {
       this.$router.push({ name: 'Profile' })
+      tracker('clickProfile')
     },
     openDetail(year, month, day) {
       this.showDetail = true
